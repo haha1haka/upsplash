@@ -6,24 +6,37 @@
 //
 
 import Foundation
+import Combine
 
 final class TopicRepositoryImpl: TopicRepository {
-
+    
     private let session: UnsplashService
+    private var anyCancellable = Set<AnyCancellable>()
     
     init(session: UnsplashService) {
         self.session = session
     }
-    
-    func fetchTopicList(completion: @escaping (Result<[Topic], NetworkError>) -> Void) {
-        session.request(target: UnsplashRouter.topic, type: [TopicDTO].self) { result in
-            switch result {
-            case .success(let topicDTO):
-                let topicList = topicDTO.map { $0.toDomain }
-                completion(.success(topicList))
-            case .failure(let error):
-                completion(.failure(error))
-            }
-        }
+        
+    func fetchTopicList() -> AnyPublisher<[Topic], NetworkError> {
+        
+        return Future<[Topic], NetworkError> { promiss in
+            self.session.request(target: UnsplashRouter.topic, type: [TopicDTO].self)
+                .sink { completion in
+
+                    if case .failure(let error) = completion {
+                        switch error {
+                        default:
+                            promiss(.failure(error))
+                        }
+                    }
+                    
+                } receiveValue: { topicDTO in
+                    let topicList = topicDTO.map { $0.toDomain }
+                    promiss(.success(topicList))
+                }
+                .store(in: &self.anyCancellable)
+        }.eraseToAnyPublisher()
+        
     }
+    
 }

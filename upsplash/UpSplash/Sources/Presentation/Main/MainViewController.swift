@@ -32,7 +32,7 @@ final class MainViewController: BaseViewController {
         super.viewDidLoad()
         bind()
         configureDataSource()
-        viewModel.fetchTopic()
+        viewModel.fetchTopicList()
         selfView.collectionView.delegate = self
     }
 }

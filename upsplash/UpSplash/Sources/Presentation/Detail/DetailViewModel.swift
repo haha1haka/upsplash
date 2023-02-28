@@ -29,10 +29,14 @@ final class DetailViewModel: DetailViewModelIO {
     var tappedfloatButtonPublish = PassthroughSubject<Void, Never>()
     var imageIdListPublish = CurrentValueSubject<[String], Never>([])
     
-    func addRealmStoreage(with item: Image, completion: @escaping () -> Void) {
+    
+    func addRealmStoreage(with item: Image) -> Future<Void, Never> {
         imageUseCase.save(with: item)
-        completion()
+        return Future() { promiss in
+            promiss(.success(()))
+        }
     }
+    
     func deleteFromRealmStoreage(with item: Image) {
         imageUseCase.delete(with: item)
     }

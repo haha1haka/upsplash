@@ -6,7 +6,8 @@
 //
 
 import Foundation
+import Combine
 
 protocol PhotoRepository {
-    func fetch(id: String, completion: @escaping (Result<[Photo], NetworkError>) -> Void)
+    func fetch(id: String) -> AnyPublisher<[Photo], NetworkError> 
 }

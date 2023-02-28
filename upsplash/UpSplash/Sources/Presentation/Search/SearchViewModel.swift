@@ -32,6 +32,7 @@ class SearchViewModel: SearchViewModelIO {
     
     private let searchUseCase: SearchUseCase
     private let searchLogUseCase: SearchLogUseCase
+    private var anyCancellable = Set<AnyCancellable>()
     
     init(searchUseCase: SearchUseCase, searchLogUseCase: SearchLogUseCase) {
         self.searchUseCase = searchUseCase
@@ -49,16 +50,19 @@ class SearchViewModel: SearchViewModelIO {
     var didSelectItemAtPublisher = PassthroughSubject<IndexPath, Never>()
     var tappedHeaderClearButtonPublisher = PassthroughSubject<Void, Never>()
     
+    
     func fetchSearchedPhotoList(text: String) {
-        searchUseCase.excute(text: text) { [weak self] result in
-            guard let self = self else { return }
-            switch result {
-            case .success(let search):
-                self.searchedPhotoListPublisher.send(search.results)
-            case .failure(let error):
-                self.errorMessagePublisher.send(error.localizedDescription)
+        searchUseCase.excute(text: text)
+            .sink { [weak self] completion in
+                guard let self = self else { return }
+                if case .failure(let error) = completion {
+                    self.errorMessagePublisher.send(error.localizedDescription)
+                }
+            } receiveValue: { [weak self] searchList in
+                guard let self = self else { return }
+                self.searchedPhotoListPublisher.send(searchList.results)
             }
-        }
+            .store(in: &anyCancellable)
     }
     
     func addRealmStoreage(with item: SearchLog) {

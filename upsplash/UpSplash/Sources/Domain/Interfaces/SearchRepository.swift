@@ -6,7 +6,8 @@
 //
 
 import Foundation
+import Combine
 
 protocol SearchRepository {
-    func fetchSearchedPhotoList(text: String, completion: @escaping (Result<Search, NetworkError>) -> Void)
+    func fetchSearchedPhotoList(text: String) -> AnyPublisher<Search, NetworkError> 
 }

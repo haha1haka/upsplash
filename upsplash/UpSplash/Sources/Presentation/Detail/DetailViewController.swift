@@ -7,6 +7,8 @@ class DetailViewController: BaseViewController {
     
     let viewModel: DetailViewModel
     
+    private var anyCancellable = Set<AnyCancellable>()
+    
     private var collectionViewDataSource: UICollectionViewDiffableDataSource<String, Photo>!
     
     init(viewModel: DetailViewModel) {
@@ -66,24 +68,29 @@ extension DetailViewController: Bindable {
                 guard let pageIndex = self.selfView.pageIndex else { return }
                 let selecteditem = self.viewModel.photoListPublish.value[pageIndex]
                 if !self.viewModel.imageIdListPublish.value.contains(selecteditem.id) {
+
                     self.viewModel.addRealmStoreage(with: Image(
                         id: selecteditem.id,
                         width: selecteditem.width,
                         height: selecteditem.height,
                         url: selecteditem.urls.regular)
-                    ) {
+                    )
+                    .sink {
                         self.showAlert(message: "이미지가 저장 되었습니다.")
                     }
+                    .store(in: &self.anyCancellable)
+                    
                 } else {
-                    self.showAlertMessage {
-                        self.viewModel.deleteFromRealmStoreage(with: Image(
-                            id: selecteditem.id,
-                            width: selecteditem.width,
-                            height: selecteditem.height,
-                            url: selecteditem.urls.regular)
-                        )
-                        self.showAlert(message: "삭제 되었습니다.")
-                    }
+                    self.showAlertMessage()
+                        .sink {
+                            self.viewModel.deleteFromRealmStoreage(with: Image(
+                                id: selecteditem.id,
+                                width: selecteditem.width,
+                                height: selecteditem.height,
+                                url: selecteditem.urls.regular)
+                            )
+                            self.showAlert(message: "삭제 되었습니다.")
+                        }.store(in: &self.anyCancellable)
                 }
             }
             .store(in: &cancellableBag)

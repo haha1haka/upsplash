@@ -6,26 +6,36 @@
 //
 
 import Foundation
+import Combine
 
 protocol TopicUseCase {
-    func excute(completion: @escaping (Result<[Topic], NetworkError>) -> Void)
+    func excute() -> AnyPublisher<[Topic], NetworkError>
 }
 
 final class TopicUseCaseImpl: TopicUseCase {
     private let topicRepository: TopicRepository
+    private var anyCancellable = Set<AnyCancellable>()
     
     init(topicRepository: TopicRepository) {
         self.topicRepository = topicRepository
     }
-    
-    func excute(completion: @escaping (Result<[Topic], NetworkError>) -> Void) {
-        topicRepository.fetchTopicList { result in
-            switch result {
-            case .success(let topicList):
-                completion(.success(topicList))
-            case .failure(let error):
-                completion(.failure(error))
-            }
-        }
+
+    func excute() -> AnyPublisher<[Topic], NetworkError> {
+        
+        return Future<[Topic], NetworkError> { [weak self] promiss in
+            guard let self = self else { return }
+            self.topicRepository.fetchTopicList()
+                .sink { completion in
+                    if case .failure(let error) = completion {
+                        switch error {
+                        default:
+                            promiss(.failure(error))
+                        }
+                    }
+                } receiveValue: { topicList in
+                    promiss(.success(topicList))
+                }
+                .store(in: &self.anyCancellable)
+        }.eraseToAnyPublisher()
     }
 }

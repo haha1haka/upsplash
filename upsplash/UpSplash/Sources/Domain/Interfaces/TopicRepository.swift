@@ -6,7 +6,8 @@
 //
 
 import Foundation
+import Combine
 
 protocol TopicRepository {
-    func fetchTopicList(completion: @escaping (Result<[Topic], NetworkError>) -> Void)
+    func fetchTopicList() -> AnyPublisher<[Topic], NetworkError>
 }

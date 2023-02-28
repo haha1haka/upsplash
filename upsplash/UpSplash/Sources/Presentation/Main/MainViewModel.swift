@@ -22,6 +22,7 @@ final class MainViewModel: MainViewModelIO {
     
     private let topicUseCase: TopicUseCase
     private let photoUseCase: PhotoUseCase
+    private var anyCancellable = Set<AnyCancellable>()
     
     init(topicUseCase: TopicUseCase, photoUseCase: PhotoUseCase) {
         self.topicUseCase = topicUseCase
@@ -34,36 +35,40 @@ final class MainViewModel: MainViewModelIO {
     var didSelectItemAtPublisher = PassthroughSubject<IndexPath, Never>()
     var isLoadingPublisher = CurrentValueSubject<Bool, Never>(false)
     
-    func fetchTopic() {
+    func fetchTopicList() {
         isLoadingPublisher.send(true)
-        topicUseCase.excute { [weak self] result in
-            guard let self = self else { return }
-            switch result {
-            case .success(let topicList):
+        topicUseCase.excute()
+            .sink { [weak self] completion in
+                guard let self = self else { return }
+                if case .failure(let error) = completion {
+                    self.errorPublisher.send(error.localizedDescription)
+                }
+                self.isLoadingPublisher.send(false)
+            } receiveValue: { [weak self] topicList in
+                guard let self = self else { return }
                 self.topicListPublisher.send(topicList)
                 self.isLoadingPublisher.send(false)
-            case .failure(let error):
-                self.errorPublisher.send(error.localizedDescription)
-                self.isLoadingPublisher.send(false)
             }
-        }
+            .store(in: &self.anyCancellable)
     }
     
     func fetchTopicPhoto(id: String) {
         isLoadingPublisher.send(true)
-        photoUseCase.excute(id: id) { [weak self] result in
-            guard let self = self else { return }
-            switch result {
-            case .success(let photoList):
+        photoUseCase.excute(id: id)
+            .sink { [weak self] completion in
+                guard let self = self else { return }
+                if case .failure(let error) = completion {
+                    self.errorPublisher.send(error.localizedDescription)
+                }
+                self.isLoadingPublisher.send(false)
+            } receiveValue: { [weak self] photoList in
+                guard let self = self else { return }
                 self.photoListPublisher.send(photoList)
                 self.isLoadingPublisher.send(false)
-            case .failure(let error):
-                self.errorPublisher.send(error.localizedDescription)
-                self.isLoadingPublisher.send(false)
             }
-            
-        }
+            .store(in: &self.anyCancellable)
     }
+    
 }
 
 extension MainViewModel: MainViewModelInput {

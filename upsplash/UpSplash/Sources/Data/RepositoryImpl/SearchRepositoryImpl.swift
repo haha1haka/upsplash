@@ -6,25 +6,38 @@
 //
 
 import Foundation
+import Combine
 
 final class SearchRepositoryImpl: SearchRepository {
     
     private let session: UnsplashService
+    private var anyCancellable = Set<AnyCancellable>()
     
     init(session: UnsplashService) {
         self.session = session
     }
-    
-    func fetchSearchedPhotoList(text: String, completion: @escaping (Result<Search, NetworkError>) -> Void) {
-        session.request(target: UnsplashRouter.search(query: text), type: SearchDTO.self) { result in
-            switch result {
-            case .success(let search):
-                completion(.success(search.toDomain))
-            case .failure(let error):
-                completion(.failure(error))
-            }
-        }
+    func fetchSearchedPhotoList(text: String) -> AnyPublisher<Search, NetworkError> {
+        
+        return Future<Search, NetworkError> { promiss in
+            self.session.request(target: UnsplashRouter.search(query: text), type: SearchDTO.self)
+                .sink { completion in
+
+                    if case .failure(let error) = completion {
+                        switch error {
+                        default:
+                            promiss(.failure(error))
+                        }
+                    }
+                    
+                } receiveValue: { searchDTO in
+                    let searchList = searchDTO.toDomain
+                    promiss(.success(searchList))
+                }
+                .store(in: &self.anyCancellable)
+        }.eraseToAnyPublisher()
+        
     }
+
 }
 
 
