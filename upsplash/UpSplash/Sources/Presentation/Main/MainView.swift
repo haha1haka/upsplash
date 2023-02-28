@@ -11,14 +11,26 @@ final class MainView: BaseView {
         return view
     }()
     
+    let loadingView: UIActivityIndicatorView = {
+        let activityIndicatorView = UIActivityIndicatorView(style: .large)
+        activityIndicatorView.tintColor = .white
+        return activityIndicatorView
+    }()
+    
     override func setHierarchy() {
         addSubview(collectionView)
+        addSubview(loadingView)
     }
     
     override func setLayout() {
         collectionView.snp.makeConstraints {
             $0.top.leading.trailing.bottom.equalTo(safeAreaLayoutGuide)
         }
+        NSLayoutConstraint.activate([
+            loadingView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            loadingView.centerYAnchor.constraint(equalTo: centerYAnchor),
+        ])
+        loadingView.translatesAutoresizingMaskIntoConstraints = false
     }
     
     private func createLayout() -> UICollectionViewLayout {

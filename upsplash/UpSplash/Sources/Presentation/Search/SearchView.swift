@@ -33,7 +33,7 @@ class SearchView: BaseView {
         }
     }
 }
-// MARK: - CompositonalLayout
+
 extension SearchView {
     private func createLayout() -> UICollectionViewLayout {
         let collectionViewLayout = UICollectionViewCompositionalLayout(

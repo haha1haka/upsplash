@@ -8,20 +8,25 @@ protocol SearchViewModelInput {
     func willPresentSearchController()
     func didDismissSearchController()
     func tappedCollectionViewDidSelectItemAt(indexPath: IndexPath)
+    func tappedHeaderClearButton() 
 }
 
 protocol SearchViewModelOuput {
-    var searchedPhotoList: CurrentValueSubject<[Photo], Never> { get }
-    var errorMessage: PassthroughSubject<String?, Never> { get }
-    var searchBarBeginEditingPublish: PassthroughSubject<Void, Never> { get }
-    var searchBarCancelPublish: PassthroughSubject<Void, Never> { get }
-    var searchBarButtonClickedPublish: PassthroughSubject<Void, Never> { get }
-    var willPresentSearchControllerPublish: PassthroughSubject<Void, Never> { get }
-    var didDismissSearchControllerPublish: PassthroughSubject<Void, Never> { get }
-    var didSelectItemAtPublish: PassthroughSubject<IndexPath, Never> { get }
+    var searchedPhotoList: AnyPublisher<[Photo], Never> { get }
+    var error: AnyPublisher<String?, Never> { get }
+    var eventSearchBarBeginEditing: AnyPublisher<Void, Never> { get }
+    var didTappedSearchBarCancel: AnyPublisher<Void, Never> { get }
+    var didTappedSearchBar: AnyPublisher<Void, Never> { get }
+    var eventWillPresentSearchController: AnyPublisher<Void, Never> { get }
+    var eventdidDismissSearchController: AnyPublisher<Void, Never> { get }
+    var didTappedDidSelectItemAt: AnyPublisher<IndexPath, Never> { get }
+    var didTappedHeader: AnyPublisher<Void, Never> { get }
 }
 
-protocol SearchViewModelIO: SearchViewModelInput, SearchViewModelOuput {}
+protocol SearchViewModelIO {
+    var input: SearchViewModelInput { get }
+    var output: SearchViewModelOuput { get }
+}
 
 class SearchViewModel: SearchViewModelIO {
     
@@ -33,27 +38,29 @@ class SearchViewModel: SearchViewModelIO {
         self.searchLogUseCase = searchLogUseCase
     }
     
-    var searchedPhotoList = CurrentValueSubject<[Photo], Never>([])
-    var errorMessage = PassthroughSubject<String?, Never>()
-    var searchBarBeginEditingPublish = PassthroughSubject<Void, Never>()
-    var searchBarCancelPublish = PassthroughSubject<Void, Never>()
-    var searchBarButtonClickedPublish = PassthroughSubject<Void, Never>()
-    var willPresentSearchControllerPublish = PassthroughSubject<Void, Never>()
-    var didDismissSearchControllerPublish = PassthroughSubject<Void, Never>()
-    var didSelectItemAtPublish = PassthroughSubject<IndexPath, Never>()
-    var tappedHeaderClearButtonPublish = PassthroughSubject<Void, Never>()
+    var searchedPhotoListPublisher = CurrentValueSubject<[Photo], Never>([])
+    var errorMessagePublisher = PassthroughSubject<String?, Never>()
+    
+    var searchBarBeginEditingPublisher = PassthroughSubject<Void, Never>()
+    var searchBarCancelPublisher = PassthroughSubject<Void, Never>()
+    var searchBarButtonClickedPublisher = PassthroughSubject<Void, Never>()
+    var willPresentSearchControllerPublisher = PassthroughSubject<Void, Never>()
+    var didDismissSearchControllerPublisher = PassthroughSubject<Void, Never>()
+    var didSelectItemAtPublisher = PassthroughSubject<IndexPath, Never>()
+    var tappedHeaderClearButtonPublisher = PassthroughSubject<Void, Never>()
     
     func fetchSearchedPhotoList(text: String) {
         searchUseCase.excute(text: text) { [weak self] result in
             guard let self = self else { return }
             switch result {
             case .success(let search):
-                self.searchedPhotoList.send(search.results)
+                self.searchedPhotoListPublisher.send(search.results)
             case .failure(let error):
-                self.errorMessage.send(error.message)
+                self.errorMessagePublisher.send(error.localizedDescription)
             }
         }
     }
+    
     func addRealmStoreage(with item: SearchLog) {
         searchLogUseCase.save(with: item)
     }
@@ -71,28 +78,43 @@ class SearchViewModel: SearchViewModelIO {
     }
 }
 
-extension SearchViewModel {
+extension SearchViewModel: SearchViewModelInput {
+    var input: SearchViewModelInput { self }
+    
     func tappedSearchBarEditing() {
-        searchBarBeginEditingPublish.send()
+        searchBarBeginEditingPublisher.send()
     }
     func tappedSearchBarCancel() {
-        searchBarCancelPublish.send()
+        searchBarCancelPublisher.send()
     }
     func tappedSearchBarButtonClicked() {
-        searchBarButtonClickedPublish.send()
+        searchBarButtonClickedPublisher.send()
     }
     func willPresentSearchController() {
-        willPresentSearchControllerPublish.send()
+        willPresentSearchControllerPublisher.send()
     }
     func didDismissSearchController() {
-        didDismissSearchControllerPublish.send()
+        didDismissSearchControllerPublisher.send()
     }
     func tappedCollectionViewDidSelectItemAt(indexPath: IndexPath) {
-        didSelectItemAtPublish.send(indexPath)
+        didSelectItemAtPublisher.send(indexPath)
     }
     func tappedHeaderClearButton() {
         deleteSearchLog()
-        tappedHeaderClearButtonPublish.send()
+        tappedHeaderClearButtonPublisher.send()
     }
 }
 
+extension SearchViewModel: SearchViewModelOuput {
+    var output: SearchViewModelOuput { self }
+    
+    var searchedPhotoList: AnyPublisher<[Photo], Never> { searchedPhotoListPublisher.eraseToAnyPublisher() }
+    var error: AnyPublisher<String?, Never> { errorMessagePublisher.eraseToAnyPublisher() }
+    var eventSearchBarBeginEditing: AnyPublisher<Void, Never> { searchBarBeginEditingPublisher.eraseToAnyPublisher() }
+    var didTappedSearchBarCancel: AnyPublisher<Void, Never> { searchBarCancelPublisher.eraseToAnyPublisher() }
+    var didTappedSearchBar: AnyPublisher<Void, Never> { searchBarButtonClickedPublisher.eraseToAnyPublisher() }
+    var eventWillPresentSearchController: AnyPublisher<Void, Never> { willPresentSearchControllerPublisher.eraseToAnyPublisher() }
+    var eventdidDismissSearchController: AnyPublisher<Void, Never> { didDismissSearchControllerPublisher.eraseToAnyPublisher() }
+    var didTappedDidSelectItemAt: AnyPublisher<IndexPath, Never> { didSelectItemAtPublisher.eraseToAnyPublisher() }
+    var didTappedHeader: AnyPublisher<Void, Never> { tappedHeaderClearButtonPublisher.eraseToAnyPublisher() }
+}

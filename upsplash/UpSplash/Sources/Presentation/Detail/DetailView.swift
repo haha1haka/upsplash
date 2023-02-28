@@ -26,7 +26,6 @@ final class DetailView: BaseView {
         button.setTitleColor(UIColor.orange, for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setImage(UIImage(systemName: "tray.and.arrow.down"), for: .normal)
-        button.addTarget(self, action: #selector(tappedFloatingButton), for: .touchUpInside)
         return button
     }()
     
@@ -47,6 +46,9 @@ final class DetailView: BaseView {
             $0.bottom.equalTo(safeAreaLayoutGuide).inset(10)
             $0.trailing.equalTo(safeAreaLayoutGuide).inset(10)
         }
+    }
+    override func setAttributes() {
+        floatingButton.addTarget(self, action: #selector(tappedFloatingButton), for: .touchUpInside)
     }
 }
 

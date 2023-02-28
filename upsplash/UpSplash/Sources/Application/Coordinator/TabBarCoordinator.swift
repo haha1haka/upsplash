@@ -1,38 +1,35 @@
 import UIKit
 
-enum TabBar: Int, CaseIterable {
-    case main
-    case search
-    case album
-}
-
-extension TabBar {
-    
-    var title: String {
-        switch self {
-        case .main:
-            return "UpSplash"
-        case .search:
-            return "Search"
-        case .album:
-            return "Album"
-        }
-    }
-    
-    var image: UIImage? {
-        switch self {
-        case .main:
-            return UIImage(systemName: "photo")
-        case .search:
-            return UIImage(systemName: "magnifyingglass")
-        case .album:
-            return UIImage(systemName: "person.crop.circle.fill")
-        }
-    }
-}
-
 class TabBarCoordinator: Coordinator {
     
+    enum TabBar: Int, CaseIterable {
+        case main
+        case search
+        case album
+        
+        var title: String {
+            switch self {
+            case .main:
+                return "UpSplash"
+            case .search:
+                return "Search"
+            case .album:
+                return "Album"
+            }
+        }
+        
+        var image: UIImage? {
+            switch self {
+            case .main:
+                return UIImage(systemName: "photo")
+            case .search:
+                return UIImage(systemName: "magnifyingglass")
+            case .album:
+                return UIImage(systemName: "person.crop.circle.fill")
+            }
+        }
+    }
+
     var childCoordinators = [Coordinator]()
     var navigationController: UINavigationController
     var tabBarController: UITabBarController

@@ -37,7 +37,9 @@ class SearchViewController: BaseViewController {
 
 extension SearchViewController: Bindable {
     func bind() {
-        viewModel.searchedPhotoList
+        viewModel
+            .output
+            .searchedPhotoList
             .receive(on: DispatchQueue.main)
             .sink { [weak self] searchedPhotoList in
                 guard let self = self else { return }
@@ -48,15 +50,22 @@ extension SearchViewController: Bindable {
             }
             .store(in: &cancellableBag)
         
-        viewModel.searchBarBeginEditingPublish
+
+        viewModel
+            .output
+            .eventSearchBarBeginEditing
             .receive(on: DispatchQueue.main)
             .sink{ [weak self] _ in
                 guard let self = self else { return }
+                print("fsdfsdfsdfsdf")
                 self.selfView.searchController.showsSearchResultsController = true
                 }
             .store(in: &cancellableBag)
         
-        viewModel.searchBarCancelPublish
+        
+        viewModel
+            .output
+            .didTappedSearchBarCancel
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self = self else { return }
@@ -66,11 +75,14 @@ extension SearchViewController: Bindable {
             }
             .store(in: &cancellableBag)
         
-        viewModel.searchBarButtonClickedPublish
+        viewModel
+            .output
+            .didTappedSearchBar
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 guard let searchText = self.selfView.searchController.searchBar.text else { return }
+                print("searchBarButtonClickedPublish")
                 self.selfView.searchController.showsSearchResultsController = false
                 
                 self.viewModel.fetchSearchedPhotoList(text: searchText)
@@ -78,6 +90,7 @@ extension SearchViewController: Bindable {
                 if self.viewModel.isContainsSearchLogInDB(searchText: searchText) {
                     self.viewModel.addRealmStoreage(with: SearchLog(text: searchText))
                 }
+                
                 let searchLogList = self.viewModel.fetchSearchLog()
                 var snapshot = NSDiffableDataSourceSnapshot<String, String>()
                 snapshot.appendSections(["🔥 Recent Search"])
@@ -86,32 +99,41 @@ extension SearchViewController: Bindable {
             }
             .store(in: &cancellableBag)
         
-        viewModel.willPresentSearchControllerPublish
+        viewModel
+            .output
+            .eventWillPresentSearchController
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self = self else { return }
+                print("willPresentSearchControllerPublish")
                 self.selfView.searchController.searchBar.scopeButtonTitles = ["Photos", "Collections", "Users"]
                 self.selfView.searchController.searchBar.selectedScopeButtonIndex = .zero
             }
             .store(in: &cancellableBag)
         
-        viewModel.didDismissSearchControllerPublish
+        viewModel
+            .output
+            .eventdidDismissSearchController
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 self.selfView.searchController.searchBar.scopeButtonTitles = nil
             }
             .store(in: &cancellableBag)
+
         
-        viewModel.didSelectItemAtPublish
+        viewModel
+            .output
+            .didTappedDidSelectItemAt
             .receive(on: DispatchQueue.main)
             .sink { [weak self] indexPath in
                 guard let self = self else { return }
-                self.coordinator?.pushDetailViewController(with: self.viewModel.searchedPhotoList.value, indexPath: indexPath)
+                self.coordinator?.pushDetailViewController(with: self.viewModel.searchedPhotoListPublisher.value, indexPath: indexPath)
             }
             .store(in: &cancellableBag)
         
-        viewModel.tappedHeaderClearButtonPublish
+        viewModel
+            .output.didTappedHeader
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self = self else { return }
@@ -146,35 +168,36 @@ extension SearchViewController {
 extension SearchViewController: UISearchBarDelegate {
     
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
-        viewModel.tappedSearchBarEditing()
+        viewModel.input.tappedSearchBarEditing()
     }
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-        viewModel.tappedSearchBarCancel()
+        viewModel.input.tappedSearchBarCancel()
     }
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        viewModel.tappedSearchBarButtonClicked()
+        viewModel.input.tappedSearchBarButtonClicked()
     }
 }
 
 extension SearchViewController: UISearchControllerDelegate {
     func willPresentSearchController(_ searchController: UISearchController) {
-        viewModel.willPresentSearchController()
+        viewModel.input.willPresentSearchController()
     }
 }
 
 extension SearchViewController: UICollectionViewDelegate {
     func didDismissSearchController(_ searchController: UISearchController) {
-        viewModel.didDismissSearchController()
+        viewModel.input.didDismissSearchController()
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        viewModel.tappedCollectionViewDidSelectItemAt(indexPath: indexPath)
+        viewModel.input.tappedCollectionViewDidSelectItemAt(indexPath: indexPath)
     }
 }
+
 extension SearchViewController: ResultClearButtonDelegate {
     func tappedClearButton() {
-        viewModel.tappedHeaderClearButton()
+        viewModel.input.tappedHeaderClearButton()
     }
 }

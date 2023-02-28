@@ -37,7 +37,9 @@ class AlbumViewController: BaseViewController {
 
 extension AlbumViewController: Bindable {
     func bind() {
-        viewModel.albumImageListPublish
+        viewModel
+            .output
+            .albumImageList
             .receive(on: DispatchQueue.main)
             .sink { [weak self] imageList in
                 guard let self = self else { return }
@@ -48,7 +50,9 @@ extension AlbumViewController: Bindable {
             }
             .store(in: &cancellableBag)
         
-        viewModel.didSelectItemAtPublish
+        viewModel
+            .output
+            .didTappedSelectedItemAl
             .receive(on: DispatchQueue.main)
             .sink { [weak self] indexPath in
                 guard let self = self else { return }
@@ -77,6 +81,6 @@ extension AlbumViewController {
 
 extension AlbumViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        viewModel.tappedCollectionViewDidSelectItemAt(indexPath: indexPath)
+        viewModel.input.tappedCollectionViewDidSelectItemAt(indexPath: indexPath)
     }
 }

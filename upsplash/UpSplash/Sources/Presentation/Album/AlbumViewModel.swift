@@ -1,16 +1,19 @@
 import Foundation
 import Combine
 
-
 protocol AlbumViewModelInput {
     func tappedCollectionViewDidSelectItemAt(indexPath: IndexPath)
 }
+
 protocol AlbumViewModelOuput {
-    var albumImageListPublish: CurrentValueSubject<[Image], Never> { get }
-    var didSelectItemAtPublish: PassthroughSubject<IndexPath, Never> { get }
+    var albumImageList: AnyPublisher<[Image], Never> { get }
+    var didTappedSelectedItemAl: AnyPublisher<IndexPath, Never> { get }
 }
 
-protocol AlbumViewModelIO: AlbumViewModelInput, AlbumViewModelOuput {}
+protocol AlbumViewModelIO {
+    var input: AlbumViewModelInput { get }
+    var output: AlbumViewModelOuput { get }
+}
 
 final class AlbumViewModel: AlbumViewModelIO {
     
@@ -28,8 +31,18 @@ final class AlbumViewModel: AlbumViewModelIO {
     }
 }
 
-extension AlbumViewModel {
+extension AlbumViewModel: AlbumViewModelInput {
+    var input: AlbumViewModelInput { self }
+    
     func tappedCollectionViewDidSelectItemAt(indexPath: IndexPath) {
         didSelectItemAtPublish.send(indexPath)
     }
+}
+
+extension AlbumViewModel: AlbumViewModelOuput {
+    var output: AlbumViewModelOuput { self }
+    
+    var albumImageList: AnyPublisher<[Image], Never> { albumImageListPublish.eraseToAnyPublisher() }
+    var didTappedSelectedItemAl: AnyPublisher<IndexPath, Never> { didSelectItemAtPublish.eraseToAnyPublisher() }
+    
 }

@@ -90,10 +90,6 @@ Packages
 xcuserdata
 *.xcodeproj
 
-### 
-UnsplashAPIKey.swift
-Interfaces/
-
 ### Xcode ###
 
 ## Xcode 8 and earlier

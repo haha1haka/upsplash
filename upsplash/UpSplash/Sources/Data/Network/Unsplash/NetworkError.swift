@@ -7,6 +7,12 @@
 
 import Foundation
 
-struct NetworkError: Error {
-    let message: String
+enum NetworkError: Error {
+    case unexpectedData
+    case decodingError
+    case clientError
+    case serverError
+    case internalError
 }
+
+

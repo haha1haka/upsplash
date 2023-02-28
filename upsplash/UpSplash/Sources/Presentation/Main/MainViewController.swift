@@ -3,7 +3,7 @@ import Combine
 
 final class MainViewController: BaseViewController {
     
-    enum SectionItem: Hashable {
+    @frozen enum SectionItem: Hashable {
         case topic(Topic)
         case topicPhoto(Photo)
     }
@@ -38,8 +38,11 @@ final class MainViewController: BaseViewController {
 }
 
 extension MainViewController: Bindable {
+    
     func bind() {
-        viewModel.topicListPublish
+        viewModel
+            .output
+            .topicList
             .receive(on: DispatchQueue.main)
             .sink { [weak self] topicList in
                 guard let self = self else { return }
@@ -50,7 +53,9 @@ extension MainViewController: Bindable {
             }
             .store(in: &cancellableBag)
         
-        viewModel.photoListPublish
+        viewModel
+            .output
+            .photoList
             .receive(on: DispatchQueue.main)
             .sink { [weak self] topicPhoto in
                 guard let self = self else { return }
@@ -65,19 +70,35 @@ extension MainViewController: Bindable {
             }
             .store(in: &cancellableBag)
         
-        viewModel.didSelectItemAtPublish
+        viewModel
+            .output
+            .didSelectedItemAt
             .receive(on: DispatchQueue.main)
             .sink { [weak self] indexPath in
                 guard let self = self else { return }
                 let selectedItem = self.collectionViewDataSource.itemIdentifier(for: indexPath)
+
                 switch selectedItem {
                 case .topic(let topic):
                     self.viewModel.fetchTopicPhoto(id: topic.id)
                 case .topicPhoto:
-                    self.coordinator?.pushDetailViewController(with: self.viewModel.photoListPublish.value, indexPath: indexPath)
-                default:
+                    self.coordinator?.pushDetailViewController(
+                        with: self.viewModel.photoListPublisher.value,
+                        indexPath: indexPath
+                    )
+                case _:
                     return
                 }
+            }
+            .store(in: &cancellableBag)
+        
+        viewModel
+            .output
+            .isLoading
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isLoading in
+                guard let self = self else { return }
+                isLoading ? self.selfView.loadingView.startAnimating() : self.selfView.loadingView.stopAnimating()
             }
             .store(in: &cancellableBag)
     }
@@ -113,6 +134,6 @@ extension MainViewController {
 
 extension MainViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        viewModel.tappedCollectionViewDidSelectItemAt(indexPath: indexPath)
+        viewModel.input.tappedCollectionViewDidSelectItemAt(indexPath: indexPath)
     }
 }

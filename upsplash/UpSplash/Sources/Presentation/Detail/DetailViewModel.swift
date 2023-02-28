@@ -5,13 +5,16 @@ protocol DetailViewModelInput {
     func tappedFloatingButton()
 }
 protocol DetailViewModelOuput {
-    var photoListPublish: CurrentValueSubject<[Photo], Never> { get }
-    var indexPathPublish: CurrentValueSubject<IndexPath, Never> { get }
-    var tappedfloatButtonPublish: PassthroughSubject<Void, Never> { get }
-    var imageIdListPublish: CurrentValueSubject<[String], Never> { get }
+    var photoList: AnyPublisher<[Photo], Never> { get }
+    var currentIndexPath: AnyPublisher<IndexPath, Never> { get }
+    var didTappedFloatingButton: AnyPublisher<Void, Never> { get }
+    var imageIdList: AnyPublisher<[String], Never> { get }
 }
 
-protocol DetailViewModelIO: DetailViewModelInput, DetailViewModelOuput {}
+protocol DetailViewModelIO {
+    var input: DetailViewModelInput { get }
+    var output: DetailViewModelOuput { get }
+}
 
 final class DetailViewModel: DetailViewModelIO {
     
@@ -22,7 +25,7 @@ final class DetailViewModel: DetailViewModelIO {
     }
     
     var photoListPublish = CurrentValueSubject<[Photo], Never>([])
-    var indexPathPublish = CurrentValueSubject<IndexPath, Never>(IndexPath())
+    var indexPathPublisher = PassthroughSubject<IndexPath, Never>()
     var tappedfloatButtonPublish = PassthroughSubject<Void, Never>()
     var imageIdListPublish = CurrentValueSubject<[String], Never>([])
     
@@ -39,10 +42,20 @@ final class DetailViewModel: DetailViewModelIO {
     }
 }
 
-// MARK: - Input
-extension DetailViewModel {
+extension DetailViewModel: DetailViewModelInput {
+    var input: DetailViewModelInput { self }
+    
     func tappedFloatingButton() {
         fetchImageIdList()
         tappedfloatButtonPublish.send()
     }
+}
+
+extension DetailViewModel: DetailViewModelOuput {
+    var output: DetailViewModelOuput { self }
+    
+    var photoList: AnyPublisher<[Photo], Never> { photoListPublish.eraseToAnyPublisher() }
+    var currentIndexPath: AnyPublisher<IndexPath, Never> { indexPathPublisher.eraseToAnyPublisher() }
+    var didTappedFloatingButton: AnyPublisher<Void, Never> { tappedfloatButtonPublish.eraseToAnyPublisher() }
+    var imageIdList: AnyPublisher<[String], Never> { imageIdListPublish.eraseToAnyPublisher() }
 }

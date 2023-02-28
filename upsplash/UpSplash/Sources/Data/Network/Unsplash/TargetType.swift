@@ -4,10 +4,10 @@ protocol TargetType {
     var scheme: String { get }
     var host: String { get }
     var path: String { get }
-    var header: [String: String] { get } //해더
-    var queryItems: [URLQueryItem] { get } //url구성
+    var header: [String: String] { get }
+    var queryItems: [URLQueryItem] { get }
     var httpMethod: HTTPMethod { get }
-    var parameters: String? { get } //바디
+    var parameters: String? { get } 
 }
 
 extension TargetType {

@@ -31,7 +31,9 @@ class DetailViewController: BaseViewController {
 
 extension DetailViewController: Bindable {
     func bind() {
-        viewModel.photoListPublish
+        viewModel
+            .output
+            .photoList
             .receive(on: DispatchQueue.main)
             .sink { [weak self] photoList in
                 guard let self = self else { return }
@@ -41,8 +43,11 @@ extension DetailViewController: Bindable {
                 self.collectionViewDataSource.apply(snapshot)
             }
             .store(in: &cancellableBag)
+
         
-        viewModel.indexPathPublish
+        viewModel
+            .output
+            .currentIndexPath
             .receive(on: DispatchQueue.main)
             .sink { [weak self] indexPath in
                 guard let self = self else { return }
@@ -52,7 +57,9 @@ extension DetailViewController: Bindable {
             }
             .store(in: &cancellableBag)
         
-        viewModel.tappedfloatButtonPublish
+        viewModel
+            .output
+            .didTappedFloatingButton
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self = self else { return }
@@ -97,6 +104,6 @@ extension DetailViewController {
 
 extension DetailViewController: DetailFloatButtonDelegatge {
     func tappedFloatingButton() {
-        viewModel.tappedFloatingButton()
+        viewModel.input.tappedFloatingButton()
     }
 }

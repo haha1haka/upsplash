@@ -25,5 +25,4 @@ final class AppCoordinator: Coordinator {
         childCoordinators.append(tabBarCoordinator)
         window.makeKeyAndVisible()
     }
-    
 }

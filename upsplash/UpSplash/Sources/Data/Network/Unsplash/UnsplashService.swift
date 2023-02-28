@@ -1,7 +1,7 @@
 import Foundation
 
 protocol UnsplashService {
-    func request<T: Decodable>(target: TargetType, type: T.Type, completion: @escaping (Result<T, NetworkError>) -> Void) 
+    func request<T: Decodable>(target: TargetType, type: T.Type, completion: @escaping (Result<T, NetworkError>) -> Void)
 }
 
 final class UnsplashServiceImpl: UnsplashService {
@@ -22,39 +22,37 @@ final class UnsplashServiceImpl: UnsplashService {
             print("📭 Request \(target.request.url!)")
             print("🚩 Response \(httpResponse.statusCode)")
             
-            if let data = data {
-                if (200...299).contains(httpResponse.statusCode) {
-                    print("✅ Success", data)
-                    do {
-                        let decodedData = try JSONDecoder().decode(T.self, from: data)
-                        DispatchQueue.main.async {
-                            completion(.success(decodedData))
-                        }
-                    }
-                    catch let decodingError {
-                        print("⁉️ Failure", decodingError)
-                        DispatchQueue.main.async {
-                            completion((.failure(NetworkError(message: decodingError.localizedDescription))))
-                        }
-                    }
-                } else { /// error decode
-                    print("❌ Failure", String(data: data, encoding: .utf8)!)
-                }
+            guard let data = data else {
+                completion(.failure(.unexpectedData))
+                return
             }
+            
+            switch httpResponse.statusCode {
+            case (200...299):
+                print("✅ Success", data)
+                do {
+                    let decodedData = try JSONDecoder().decode(T.self, from: data)
+                    completion(.success(decodedData))
+                } catch let decodingError {
+                    print("⁉️ Failure", decodingError)
+                    completion(.failure(.decodingError))
+                }
+            case (400...499):
+                print("❌ Failure", String(data: data, encoding: .utf8)!)
+                completion((.failure(.clientError)))
+            case (500...599):
+                print("❌ Failure", String(data: data, encoding: .utf8)!)
+                completion((.failure(.serverError)))
+            default:
+                completion((.failure(.internalError)))
+            }
+            
             if let error = error {
                 print("❌ Failure (Internal)", error.localizedDescription)
-                DispatchQueue.main.async {
-                    completion((.failure(NetworkError(message: error.localizedDescription))))
-                }
+                completion((.failure(.internalError)))
                 return
             }
         }.resume()
     }
     
 }
-///error JSON
-//{
-//    "errors": [
-//        "OAuth error: The access token is invalid"
-//    ]
-//}

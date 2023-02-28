@@ -31,7 +31,7 @@ class DetailCoordinator: Coordinator {
         let viewModel = DetailViewModel(imageUseCase: imageUseCaseImpl)
         let vc = DetailViewController(viewModel: viewModel)
         vc.viewModel.photoListPublish.send(item)
-        vc.viewModel.indexPathPublish.send(indexPath)
+        vc.viewModel.indexPathPublisher.send(indexPath)
         navigationController.pushViewController(vc, animated: true)
     }
     
