@@ -74,7 +74,7 @@ class SearchViewModel: SearchViewModelIO {
     }
     
     func isContainsSearchLogInDB(searchText: String) -> Bool {
-        !fetchSearchLog().contains(searchText) == true ? true : false
+        fetchSearchLog().contains(searchText) == true ? false : true
     }
     
     private func deleteSearchLog() {

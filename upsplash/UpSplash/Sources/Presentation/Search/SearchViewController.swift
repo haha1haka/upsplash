@@ -37,6 +37,7 @@ class SearchViewController: BaseViewController {
 
 extension SearchViewController: Bindable {
     func bind() {
+        
         viewModel
             .output
             .searchedPhotoList
@@ -81,23 +82,35 @@ extension SearchViewController: Bindable {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self = self else { return }
-                guard let searchText = self.selfView.searchController.searchBar.text else { return }
-                print("searchBarButtonClickedPublish")
-                self.selfView.searchController.showsSearchResultsController = false
-                
-                self.viewModel.fetchSearchedPhotoList(text: searchText)
-                
-                if self.viewModel.isContainsSearchLogInDB(searchText: searchText) {
-                    self.viewModel.addRealmStoreage(with: SearchLog(text: searchText))
-                }
-                
-                let searchLogList = self.viewModel.fetchSearchLog()
                 var snapshot = NSDiffableDataSourceSnapshot<String, String>()
+                let searchLogList = self.viewModel.fetchSearchLog()
                 snapshot.appendSections(["🔥 Recent Search"])
                 snapshot.appendItems(searchLogList.reversed())
                 self.selfView.resultViewController.collectionViewDataSource.apply(snapshot)
             }
             .store(in: &cancellableBag)
+        
+        viewModel
+            .output
+            .didTappedSearchBar
+            .sink { _ in self.selfView.searchController.showsSearchResultsController = false }
+            .store(in: &cancellableBag)
+        
+        viewModel
+            .output
+            .didTappedSearchBar
+            .compactMap { self.selfView.searchController.searchBar.text }
+            .filter { self.viewModel.isContainsSearchLogInDB(searchText: $0) }
+            .sink { self.viewModel.addRealmStoreage(with: SearchLog(text: $0)) }
+            .store(in: &cancellableBag)
+            
+        viewModel
+            .output
+            .didTappedSearchBar
+            .compactMap { self.selfView.searchController.searchBar.text }
+            .sink { self.viewModel.fetchSearchedPhotoList(text: $0) }
+            .store(in: &cancellableBag)
+            
         
         viewModel
             .output

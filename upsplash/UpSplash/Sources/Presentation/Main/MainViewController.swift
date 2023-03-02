@@ -96,11 +96,19 @@ extension MainViewController: Bindable {
             .output
             .isLoading
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] isLoading in
-                guard let self = self else { return }
-                isLoading ? self.selfView.loadingView.startAnimating() : self.selfView.loadingView.stopAnimating()
-            }
+            .filter { $0 == false }
+            .sink { _ in self.selfView.loadingView.stopAnimating() }
             .store(in: &cancellableBag)
+        
+        viewModel
+            .output
+            .isLoading
+            .receive(on: DispatchQueue.main)
+            .filter { $0 == true }
+            .sink { _ in self.selfView.loadingView.startAnimating() }
+            .store(in: &cancellableBag)
+        
+        
     }
 }
 
