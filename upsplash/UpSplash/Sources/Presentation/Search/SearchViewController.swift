@@ -157,8 +157,7 @@ extension SearchViewController: Bindable {
                 snapshot.deleteItems(allItems)
                 resultViewControllerDataSource.apply(snapshot)
             }
-            .store(in: &cancellableBag)
-        
+            .store(in: &cancellableBag)   
     }
 }
 

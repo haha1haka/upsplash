@@ -64,7 +64,7 @@ extension DetailViewController: Bindable {
             .didTappedFloatingButton
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                guard let self = self else { return }
+                guard let self = self else { return }         
                 guard let pageIndex = self.selfView.pageIndex else { return }
                 let selecteditem = self.viewModel.photoListPublish.value[pageIndex]
                 if !self.viewModel.imageIdListPublish.value.contains(selecteditem.id) {

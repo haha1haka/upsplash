@@ -12,9 +12,9 @@ extension UIViewController {
     }
     
     func showAlertMessage() -> Future<Void, Never> {
-        
+        let alert = UIAlertController(title: "저장된 이미지", message: "이미 저장된 이미지 입니다. 삭제 하시겠습니까?", preferredStyle: .alert)
         return Future() { promiss in
-            let alert = UIAlertController(title: "저장된 이미지", message: "이미 저장된 이미지 입니다. 삭제 하시겠습니까?", preferredStyle: .alert)
+            
             let ok = UIAlertAction(title: "확인", style: .default) { _ in
                 promiss(.success(()))
             }
@@ -25,7 +25,6 @@ extension UIViewController {
             alert.addAction(cancel)
             self.present(alert, animated: true)
         }
-
-
+        
     }
 }

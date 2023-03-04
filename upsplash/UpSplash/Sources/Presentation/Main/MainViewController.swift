@@ -96,7 +96,7 @@ extension MainViewController: Bindable {
             .output
             .isLoading
             .receive(on: DispatchQueue.main)
-            .filter { $0 == false }
+            .filter { !$0 }
             .sink { _ in self.selfView.loadingView.stopAnimating() }
             .store(in: &cancellableBag)
         
@@ -104,7 +104,7 @@ extension MainViewController: Bindable {
             .output
             .isLoading
             .receive(on: DispatchQueue.main)
-            .filter { $0 == true }
+            .filter { $0 }
             .sink { _ in self.selfView.loadingView.startAnimating() }
             .store(in: &cancellableBag)
         
